@@ -95,7 +95,14 @@ medians <- as.data.frame(aggregate(completed_beer[,c(7,8)], by=list(completed_be
 median_df <- rename(medians, c("Group.1"="State")) # rename the column to State
 
 median_graph <- median_df %>% ggplot(aes(x = ABV, y = IBU, color=State)) + geom_point() + ggtitle("Median Alcohol Content and Bitterness by State") # plot scatter plot
-ggplotly(median_graph)
+
+ABV_bar <-ggplot(data=median_df, aes(x = State, y = ABV, fill = State)) +
+  geom_bar(stat="identity", width = 0.75) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Median ABV by State")
+ggplotly(ABV_bar)
+
+IBU_bar <-ggplot(data=median_df, aes(x = State, y = IBU, fill = State)) +
+  geom_bar(stat="identity", width = 0.75) + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Median IBU by State")
+ggplotly(IBU_bar)
 
 ```
 ### Max ABV and IBU
