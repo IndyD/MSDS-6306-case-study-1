@@ -1,6 +1,8 @@
 ---
 title: "Brewing Up a Storm"
 output: html_notebook
+editor_options: 
+  chunk_output_type: console
 ---
 ### Introduction
 
@@ -142,13 +144,28 @@ max_state
 The summary statistics and distribution of the ABV variable.
 
 ```{r}
+#Creates column representing ABV in percentage which is more user-readable and in-line with how
+#ABV is represented by the industry
+print("Values below are in percentage (%)")
+completed_beer$ABVpercent <- completed_beer$ABV*100 
+
+summary(completed_beer$ABVpercent) #Range, quartiles, and mean of ABV percentage value
+
+cat("Standard deviation: ", sd(completed_beer$ABVpercent)) #Standard deviation of ABV percentage value
+
 
 ```
 
 ### Relationship between Bitterness and Alcohol Content
 Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
 ```{r}
+#Correlation between ABV percentage and IBU; function uses Pearson method as default
+cor(x=completed_beer$ABVpercent, y=completed_beer$IBU)
 
+#Visualizations between ABV percentage and IBU
+ggplot(data=completed_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
+
+ggplot(data=completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
 ```
 
 ### IPAs vs. Ales
