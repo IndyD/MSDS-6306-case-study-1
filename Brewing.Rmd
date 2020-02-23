@@ -1,6 +1,8 @@
 ---
 title: "Brewing Up a Storm"
 output: html_notebook
+editor_options: 
+  chunk_output_type: console
 ---
 ### Introduction
 
@@ -154,7 +156,9 @@ Budweiser would also like to investigate the difference with respect to IBU and 
 
 In addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.  
 ```{r}
-
+ipa = brewed_beer[grep("IPA", brewed_beer$Style), ]
+not_ipa = brewed_beer[-grep("IPA", brewed_beer$Style), ]
+ales = not_ipa[grep("Ale", not_ipa$Style), ]
 ```
 
 ### Additional inferences
