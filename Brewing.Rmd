@@ -83,8 +83,14 @@ completed_beer <- brewed_beer[complete.cases(brewed_beer), ] # df with only comp
 
 # replacing NA with averages
 averaged_beer <- brewed_beer # make a duplicate of the original df to manipulate
-averaged_beer$ABV <- mean(averaged_beer$ABV, na.rm = TRUE)
-averaged_beer$IBU <- mean(averaged_beer$IBU, na.rm = TRUE)
+# averaged_beer$ABV <- mean(averaged_beer$ABV, na.rm = TRUE) --- this function replaces the entire column with the average value of ABV instead of only the column values that are 'NA'
+# averaged_beer$IBU <- mean(averaged_beer$IBU, na.rm = TRUE) --- same as above but with IBU
+
+#replace NA values with the average of the present values
+averaged_beer$IBU[is.na(averaged_beer$IBU)]<-averageIBU
+averaged_beer$ABV[is.na(averaged_beer$ABV)]<-averageABV
+
+
 colSums(is.na(averaged_beer))
 
 ```
@@ -130,11 +136,20 @@ The summary statistics and distribution of the ABV variable.
 #Creates column representing ABV in percentage which is more user-readable and in-line with how
 #ABV is represented by the industry
 print("Values below are in percentage (%)")
+
+#Using method 1 for handling missing data
 completed_beer$ABVpercent <- completed_beer$ABV*100 
 
 summary(completed_beer$ABVpercent) #Range, quartiles, and mean of ABV percentage value
 
 cat("Standard deviation: ", sd(completed_beer$ABVpercent)) #Standard deviation of ABV percentage value
+
+#Using method 2 for handling missing data
+averaged_beer$ABVpercent <- averaged_beer$ABV*100
+
+summary(averaged_beer$ABVpercent)
+
+cat("Standard deviation: ", sd(averaged_beer$ABVpercent))
 
 
 ```
@@ -142,6 +157,8 @@ cat("Standard deviation: ", sd(completed_beer$ABVpercent)) #Standard deviation o
 ### Relationship between Bitterness and Alcohol Content
 Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
 ```{r}
+#Uses method 1 for handling missing data (remove incomplete lines)
+
 #Correlation between ABV percentage and IBU; function uses Pearson method as default
 cor(x=completed_beer$ABVpercent, y=completed_beer$IBU)
 
@@ -149,6 +166,18 @@ cor(x=completed_beer$ABVpercent, y=completed_beer$IBU)
 ggplot(data=completed_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
 
 ggplot(data=completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
+```
+
+```{r}
+#Uses method 2 for handling missing data (replace NAs with average of present data)
+
+#Correlation between ABV percentage and IBU; function uses Pearson method as default
+cor(x=averaged_beer$ABVpercent, y=averaged_beer$IBU)
+
+#Visualizations between ABV percentage and IBU
+ggplot(data=averaged_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
+
+ggplot(data=averaged_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
 ```
 
 ### IPAs vs. Ales
