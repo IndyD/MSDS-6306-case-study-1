@@ -8,13 +8,10 @@ editor_options:
 
 ```{r}
 # load in the libraries
-library(tidyverse)
-library(dplyr)
-library(tidyr)
 library(stringi)
-library(ggplot2)
 library(plotly)
 library(plyr)
+library(tidyverse)
 ```
 
 ## Analysis
@@ -23,7 +20,7 @@ library(plyr)
 Read in data from files
 ```{r}
 beer = read.csv("./data/Beers.csv",header = TRUE)
-breweries = read.csv("./data/Breweries.csv",header = TRUE)
+breweries = read.csv("./data/Breweries.csv",header = TRUE, strip.white = TRUE)
 
 #display the dataframes
 beer
@@ -46,6 +43,26 @@ unique_state_breweies <- breweries %>% group_by(State) %>% tally(n_distinct(Name
 #### Heat Map of Breweies per State
 
 ```{r}
+## add lowercase state name for heat map
+lstates = tolower(state.name)
+state_count = state_breweies %>% 
+    add_rownames("region") %>% 
+    mutate( region=lstates[match(State, state.abb)] )
+
+## find center of each state for text position 
+snames <- data.frame(region=lstates, long=state.center$x, lat=state.center$y)
+snames <- merge(snames, state_count, by="region")
+
+## merge map data with counts data
+choro <- left_join(
+  map_data("state"), 
+  state_count
+)
+ggplot(choro, aes(long, lat)) +
+  geom_polygon(aes(group = group, fill = n)) + 
+  geom_text(data=snames, aes(long, lat, label=n)) +
+  coord_quickmap()
+
 
 ```
 
@@ -59,11 +76,11 @@ attach(beer)
 beer[order(Brewery_id),] # sort the data to determine column for merge
 
 # merge on Brewery ID
-breweries_named <- rename(breweries, c("Brew_ID"="Brewery_id"))
+breweries_named <- plyr::rename(breweries, c("Brew_ID"="Brewery_id"))
 
 brewing_beer <- merge(breweries_named,beer,by="Brewery_id", all=TRUE) # outter join
 
-brewed_beer <- rename(brewing_beer, c("Name.x"="Brewery", "Name.y"="Beer")) # rename breweries and beer
+brewed_beer <- plyr::rename(brewing_beer, c("Name.x"="Brewery", "Name.y"="Beer")) # rename breweries and beer
 
 head(brewed_beer,6) # show the first 6 rows of data
 
@@ -94,7 +111,7 @@ Median of Alcohol by Volume and Bitterness by State
 ```{r}
 # group by state, get median of ABV, IBU
 medians <- as.data.frame(aggregate(completed_beer[,c(7,8)], by=list(completed_beer$State), FUN=median)) 
-median_df <- rename(medians, c("Group.1"="State")) # rename the column to State
+median_df <- plyr::rename(medians, c("Group.1"="State")) # rename the column to State
 
 median_graph <- median_df %>% ggplot(aes(x = ABV, y = IBU, color=State)) + geom_point() + ggtitle("Median Alcohol Content and Bitterness by State") # plot scatter plot
 
@@ -112,7 +129,7 @@ Which state has the maximum alcoholic (ABV) beer? Which state has the most bitte
 ```{r}
 # find the max ABV and IBU from each state
 maximums <- as.data.frame(aggregate(completed_beer[,c(7,8)], by=list(completed_beer$State), FUN=max))
-max_df <- rename(maximums, c("Group.1"="State")) # rename the column to State
+max_df <- plyr::rename(maximums, c("Group.1"="State")) # rename the column to State
 
 #find the max ABV and IBU states
 max_ABV <- max_df %>% filter(ABV == max(ABV))
@@ -159,6 +176,7 @@ In addition, while you have decided to use KNN to investigate this relationship 
 ipa = brewed_beer[grep("IPA", brewed_beer$Style), ]
 not_ipa = brewed_beer[-grep("IPA", brewed_beer$Style), ]
 ales = not_ipa[grep("Ale", not_ipa$Style), ]
+
 ```
 
 ### Additional inferences
