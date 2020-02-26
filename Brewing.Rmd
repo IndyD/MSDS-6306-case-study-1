@@ -68,6 +68,7 @@ ggplot(choro, aes(long, lat)) +
 
 
 ```
+## Question 1: 
 The range of breweries per state ranges from 1 to 47, with Colorado holding the highest number of breweries per state. The heat map above shows North and South Dakotas along with West Virginia as having the lowest number of breweries (1 per state). Following Colorado is California with 39 and Oregon with 29 breweries. There appears to be higher number of breweries in the north east and west coast, as opposed to the central states, with the exception of Colorado and Texas. 
 
 The high density of breweries may indicate greater competition, as well as a large audience for beer. 
@@ -117,6 +118,7 @@ averaged_beer$ABV[is.na(averaged_beer$ABV)]<-averageABV
 colSums(is.na(averaged_beer))
 
 ```
+## Question 3: 
 The areas missing data are contained within the alcohol by volume (ABV) and international bitterness units (IBU). The missing ABV may be explained due by state laws that do or do not regulate the labelling of alcohol content on beers. Breweries in states that do not require the ABV to be labelled may not have this data. The lack of IBU data is likely due to bitterness testing requiring lab equipment, personelle, and addiitonal expenses that are not required for the manufacturing of beer. 
 
 The data was mutated to 1. only contain data where all testing variables were complete and 2. where the missing data were replaced with the averages of the available data. 
@@ -142,6 +144,8 @@ ggplotly(IBU_bar)
 mean(median_df$ABV)
 mean(median_df$IBU)
 ```
+## Question 4: 
+
 We median as our measure of center to prevent outliers from skewing the data and causing 
 
 In comparing the median ABV, Arizona and Texas have the lowest alcohol by volume at 4.00%. Maine and Colorado have the two highest alcohol by volumes at 6.7% and 6.5%, respectively. The average median across all 50 states is 5.6% ABV and 36.98 IBU. While there is no technical maximum on the bitterness scale, majority of beers are typically below 100 ibu, with pale ales near 40 ibu and wheats near 13. While some beers are capable to breaking 100 ibu, majority are shown to be between 20 and 40 ibu, with Wisconsin having the lowest score of 19 ibu and maine having the highest score of 61 ibu. 
@@ -163,6 +167,8 @@ max_state <- rbind(max_ABV, max_IBU)
 max_state
 
 ```
+## Question 5: 
+
 Reviewing the original data rather than the medians of each state, Kentucky had the highest ABV of all states, with 12.5% alcohol by volume. Oregon has the highest bitterness score of 138 ibu. We can see that both the ABV and IBU of the two beers are above the average medians of the states (5.6% and 39.98 ibu, respectively). 
 
 This leads us to question whether there is a correlation with alcohol by volume and bitterness.
