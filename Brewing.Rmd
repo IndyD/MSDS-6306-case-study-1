@@ -11,6 +11,9 @@ editor_options:
 library(stringi)
 library(plotly)
 library(plyr)
+library(class)
+library(caret)
+library(e1071)
 library(tidyverse)
 ```
 
@@ -200,8 +203,21 @@ cor(x=completed_beer$ABVpercent, y=completed_beer$IBU)
 
 #Visualizations between ABV percentage and IBU
 ggplot(data=completed_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
-
 ggplot(data=completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
+
+# filter down to the top 12 most popular beers
+popular_styles = completed_beer %>% 
+  group_by(Style) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>%
+  head(12)
+
+top_completed_beer = completed_beer %>% filter(Style %in% popular_styles$Style)
+
+ggplot(data=top_completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) +
+  geom_point() +
+  facet_wrap(~Style)
+
 ```
 
 ```{r}
@@ -221,10 +237,45 @@ Budweiser would also like to investigate the difference with respect to IBU and 
 
 In addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.  
 ```{r}
-ipa = brewed_beer[grep("IPA", brewed_beer$Style), ]
-not_ipa = brewed_beer[-grep("IPA", brewed_beer$Style), ]
-ales = not_ipa[grep("Ale", not_ipa$Style), ]
+ipa = completed_beer[grep("IPA", completed_beer$Style), ]
+ipa$Style = completed_beer[grep("IPA", completed_beer$Style), ]
+ipa$Style = "IPA"
 
+not_ipa = completed_beer[-grep("IPA", completed_beer$Style), ]
+ales = not_ipa[grep("Ale", not_ipa$Style), ]
+ales$Style = "Ale"
+
+allAles = rbind(ipa, ales)
+
+ggplot(data=allAles, mapping=aes(x = Style, y = IBU)) + geom_boxplot() + 
+  ggtitle("IBU of IPAs vs Other Ales")
+ggplot(data=allAles, mapping=aes(x = Style, y = ABV)) + geom_boxplot() +
+  ggtitle("ABV of IPAs vs Other Ales")
+
+set.seed(0)
+splitPerc = .60
+trainIndices = sample(1:dim(allAles)[1], round(splitPerc * dim(allAles)[1]))
+train = allAles[trainIndices,]
+test = allAles[-trainIndices,]
+train_labels = train$Style
+test_labels = test$Style
+train = subset(train, select = c(ABV, IBU))
+test = subset(test, select = c(ABV, IBU))
+train = as.data.frame(scale(train))
+test = as.data.frame(scale(test))
+
+neighbors = 30
+accs = data.frame(accuracy = numeric(neighbors), k = numeric(neighbors))
+for(i in 1:neighbors)
+{
+  classifications = knn(train, test, train_labels, k = i)
+  table(test_labels, classifications)
+  CM = confusionMatrix(table(test_labels, classifications))
+  accs$accuracy[i] = CM$overall[1]
+  accs$k[i] = i
+}
+plot(accs$k,accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
+accs[12:17,]
 ```
 
 ### Additional inferences
