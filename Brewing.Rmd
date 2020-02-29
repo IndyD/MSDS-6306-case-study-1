@@ -1,7 +1,9 @@
 ---
 title: "Brewing Up a Storm"
-output: html_notebook
-editor_options: 
+output:
+  html_document:
+    df_print: paged
+editor_options:
   chunk_output_type: console
 ---
 ### Introduction
@@ -220,11 +222,33 @@ popular_styles = completed_beer %>%
 
 top_completed_beer = completed_beer %>% filter(Style %in% popular_styles$Style)
 
+print(nrow(top_completed_beer) / nrow(completed_beer))
+
 ggplot(data=top_completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) +
   geom_point() +
   facet_wrap(~Style)
 
+
+n_styles = nrow(popular_styles)
+popular_styles$ABV_IBU_corr = numeric(n_styles)
+for(i in 1:n_styles)  #n_styles)
+{
+  style = popular_styles[i, 1]$Style
+  style_beer = top_completed_beer %>% filter(Style == style)
+  popular_styles$ABV_IBU_corr[i] = cor(x=style_beer$ABVpercent, y=style_beer$IBU)
+}
+popular_styles
+
 ```
+
+## Question 7: 
+
+Looking at the scatter plot of ABV vs IBU, we see that there is a reasonably strong linear trend between ABV and IBU where higher ABVs are associated with higher IBUs. This is backed up when we see a reasonablly stong correlation of 0.671. 
+
+Going furthar, we looked at the 12 most popular beer types (which represent 65% of the beers sampled) and looked at the correlation between IBU and ABV. Interestingly, the association between ABV and IBU was not strong within the styles of beer. All the correlations were less than the 0.671 we saw overall. Some (such as American Poter, and American Double/Imperial IPA) had low correlations and scatter plots that looked random. 
+
+It seems that some styles of beer have higher IBUs and that those styles will also have higher ABVs, however within a group there is IBUs and ABU aren't as strongly tied. This means that when releasing a new beer, it might be more important to make sure the ABU and IBUs are in line with other beers of the style than trying to match some ratio of IBU and ABV.
+
 
 ```{r}
 #Uses method 2 for handling missing data (replace NAs with average of present data)
@@ -243,45 +267,66 @@ Budweiser would also like to investigate the difference with respect to IBU and 
 
 In addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.  
 ```{r}
-ipa = completed_beer[grep("IPA", completed_beer$Style), ]
-ipa$Style = completed_beer[grep("IPA", completed_beer$Style), ]
-ipa$Style = "IPA"
 
-not_ipa = completed_beer[-grep("IPA", completed_beer$Style), ]
-ales = not_ipa[grep("Ale", not_ipa$Style), ]
-ales$Style = "Ale"
-
-allAles = rbind(ipa, ales)
-
-ggplot(data=allAles, mapping=aes(x = Style, y = IBU)) + geom_boxplot() + 
-  ggtitle("IBU of IPAs vs Other Ales")
-ggplot(data=allAles, mapping=aes(x = Style, y = ABV)) + geom_boxplot() +
-  ggtitle("ABV of IPAs vs Other Ales")
-
-set.seed(0)
-splitPerc = .60
-trainIndices = sample(1:dim(allAles)[1], round(splitPerc * dim(allAles)[1]))
-train = allAles[trainIndices,]
-test = allAles[-trainIndices,]
-train_labels = train$Style
-test_labels = test$Style
-train = subset(train, select = c(ABV, IBU))
-test = subset(test, select = c(ABV, IBU))
-train = as.data.frame(scale(train))
-test = as.data.frame(scale(test))
-
-neighbors = 30
-accs = data.frame(accuracy = numeric(neighbors), k = numeric(neighbors))
-for(i in 1:neighbors)
-{
-  classifications = knn(train, test, train_labels, k = i)
-  table(test_labels, classifications)
-  CM = confusionMatrix(table(test_labels, classifications))
-  accs$accuracy[i] = CM$overall[1]
-  accs$k[i] = i
+aleSplit <- function(beers) {
+  ipa = beers[grep("IPA", beers$Style), ]
+  ipa$Style = beers[grep("IPA", beers$Style), ]
+  ipa$Style = "IPA"
+  
+  not_ipa = beers[-grep("IPA", beers$Style), ]
+  ales = not_ipa[grep("Ale", not_ipa$Style), ]
+  ales$Style = "Ale"
+  
+  allAles = rbind(ipa, ales)
+  return(allAles)
 }
-plot(accs$k,accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
-accs[12:17,]
+
+classifyKnn <- function(ales) {
+  set.seed(0)
+  splitPerc = .60
+  trainIndices = sample(1:dim(ales)[1], round(splitPerc * dim(ales)[1]))
+  train = ales[trainIndices,]
+  test = ales[-trainIndices,]
+  trainLabels = train$Style
+  testLabels = test$Style
+  train = subset(train, select = c(ABV, IBU))
+  test = subset(test, select = c(ABV, IBU))
+  train = as.data.frame(scale(train))
+  test = as.data.frame(scale(test))
+  
+  neighbors = 30
+  accs = data.frame(accuracy = numeric(neighbors), k = numeric(neighbors))
+  for(i in 1:neighbors)
+  {
+    classifications = knn(train, test, trainLabels, k = i)
+    table(testLabels, classifications)
+    CM = confusionMatrix(table(testLabels, classifications))
+    accs$accuracy[i] = CM$overall[1]
+    accs$k[i] = i
+  }
+  
+  return(accs)
+}
+
+
+completedAle = aleSplit(completed_beer)
+avgAle = aleSplit(averaged_beer)
+  
+ggplot(data=completedAle, mapping=aes(x = Style, y = IBU)) + geom_boxplot() + 
+  ggtitle("IBU of IPAs vs Other Ales")
+ggplot(data=completedAle, mapping=aes(x = Style, y = ABV)) + geom_boxplot() +
+  ggtitle("ABV of IPAs vs Other Ales")
+ggplot(data=completedAle, mapping=aes(x=ABVpercent, y=IBU, color=Style, position_jitter())) + geom_point() + xlab('% ABV') + ggtitle('ABV and IBU of IPAs vs other Ales')
+
+complete_accs = classifyKnn(completedAle)
+avg_accs = classifyKnn(avgAle)
+
+
+plot(complete_accs$k,complete_accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
+complete_accs[15,]
+
+plot(avg_accs$k,avg_accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
+
 ```
 
 ### Additional inferences
@@ -289,13 +334,5 @@ Knock their socks off!  Find one other useful inference from the data that you f
 ```{r}
 
 ```
-
-
-
-
-
-
-
-
 
 
