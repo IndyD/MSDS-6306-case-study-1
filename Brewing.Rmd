@@ -78,7 +78,7 @@ The high density of breweries may indicate greater competition, as well as a lar
 ### Cleaning the data
 Prepering/transforming the data into a usable form for analysis, visualization, etc... 
 #### Merging Dataframes
-Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.  
+Merge beer data with the breweries data. Print the first 6 observations and the last 6 observations to check the merged file.  
 ```{r}
 
 attach(beer)
@@ -92,8 +92,11 @@ brewing_beer <- merge(breweries_named,beer,by="Brewery_id", all=TRUE) # outter j
 brewed_beer <- plyr::rename(brewing_beer, c("Name.x"="Brewery", "Name.y"="Beer")) # rename breweries and beer
 
 head(brewed_beer,6) # show the first 6 rows of data
+tail(brewed_beer,6) # show the last 6 rows of data
 
 ```
+##Question 2:
+The two data sets were merged using the Brewer_id value. The first and last 6 rows of data were shown to spot-check accuracy.
 
 #### Missing Data
 Missing data are in columns ABV (62) and IBU (1005) only. 
@@ -102,12 +105,12 @@ Cleaning data in multiple options:
 2. replacing NA with the averages of the remainder of the column
 
 ```{r}
-# selecting only complete cases
+# method 1: electing only complete cases
 which(is.na(brewed_beer)) # determine which rows contain NA
 colSums(is.na(brewed_beer)) # summary of the number of NA in each column
 completed_beer <- brewed_beer[complete.cases(brewed_beer), ] # df with only complete records
 
-# replacing NA with averages
+# method 2: replacing NA with averages
 averaged_beer <- brewed_beer # make a duplicate of the original df to manipulate
 averageABV <- mean(averaged_beer$ABV, na.rm = TRUE) # set average variable for ABV
 averageIBU <- mean(averaged_beer$IBU, na.rm = TRUE) # set average variable for IBU
@@ -121,9 +124,9 @@ colSums(is.na(averaged_beer))
 
 ```
 ## Question 3: 
-The areas missing data are contained within the alcohol by volume (ABV) and international bitterness units (IBU). The missing ABV may be explained due by state laws that do or do not regulate the labelling of alcohol content on beers. Breweries in states that do not require the ABV to be labelled may not have this data. The lack of IBU data is likely due to bitterness testing requiring lab equipment, personelle, and addiitonal expenses that are not required for the manufacturing of beer. 
+The areas missing data are confined to the alcohol by volume (ABV) and international bitterness units (IBU) data values. The missing ABV may be explained due by state laws that do or do not regulate the labelling of alcohol content on beers. Breweries in states that do not require the ABV to be labelled may not have this data. The lack of IBU data is likely due to bitterness testing requiring lab equipment, personelle, and addiitonal expenses that are not required for the manufacturing of beer. 
 
-The data was mutated to 1. only contain data where all testing variables were complete and 2. where the missing data were replaced with the averages of the available data. 
+The data was mutated in two ways: method 1. which only contains data where all testing variables were complete and method 2. where the missing data were replaced with the averages of the available data. 
 
 
 ### Median Alcohol Content
@@ -148,11 +151,11 @@ mean(median_df$IBU)
 ```
 ## Question 4: 
 
-We median as our measure of center to prevent outliers from skewing the data and causing 
+We use median as our measure of center to prevent outliers from skewing the data and causing errors to interpretation
 
-In comparing the median ABV, Arizona and Texas have the lowest alcohol by volume at 4.00%. Maine and Colorado have the two highest alcohol by volumes at 6.7% and 6.5%, respectively. The average median across all 50 states is 5.6% ABV and 36.98 IBU. While there is no technical maximum on the bitterness scale, majority of beers are typically below 100 ibu, with pale ales near 40 ibu and wheats near 13. While some beers are capable to breaking 100 ibu, majority are shown to be between 20 and 40 ibu, with Wisconsin having the lowest score of 19 ibu and maine having the highest score of 61 ibu. 
+In comparing the median ABV, Arizona and Texas have the lowest alcohol by volume at 4.00%. Maine and Colorado have the two highest alcohol by volumes at 6.7% and 6.5%, respectively. While there is no technical maximum on the bitterness scale, the majority of beers are typically below 100 IBU, with pale ales near 40 IBU and wheats near 13 IBU. While some beers are capable of breaking 100 IBU, the majority are shown to be between 20 and 40 IBU, with Wisconsin having the lowest score of 19 IBU and Maine having the highest score of 61 IBU. The average median across all 50 states is 5.6% ABV and 36.98 IBU.
 
-An intersting note to take is Maine having the highest median alcohol content accompanied by the highest median bitterness score. 
+An interesting note to make is Maine having the highest median alcohol content accompanied by the highest median bitterness score. 
 
 ### Max ABV and IBU
 Which state has the maximum alcoholic (ABV) beer? Which state has the most bitter (IBU) beer?
@@ -198,8 +201,30 @@ summary(averaged_beer$ABVpercent)
 
 cat("Standard deviation: ", sd(averaged_beer$ABVpercent))
 
-
 ```
+## Question 6: 
+Summary statistics provided for ABV (%) are the data range, quartiles, mean, and standard deviation. These values differ slightly depending on which correction method is used to handle missing data in the set. 
+
+Using method 1 (ommitting non-complete records):
+Min: 2.7% ABV
+1st: 5.0% ABV
+Median: 5.7% ABV
+Mean 5.991% ABV
+3rd: 6.8% ABV
+Max: 12.5% ABV
+SD: 1.358 %ABV
+
+Using method 2 (replacing NA values with averages or the remaining column data):
+Min: 0.100%
+1st: 5.0%
+Median: 5.7%
+Mean: 5.977%
+3rd: 6.7%
+Max: 12.8%
+SD: 1.337%
+
+
+
 
 ### Relationship between Bitterness and Alcohol Content
 Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
@@ -241,15 +266,6 @@ popular_styles
 
 ```
 
-## Question 7: 
-
-Looking at the scatter plot of ABV vs IBU, we see that there is a reasonably strong linear trend between ABV and IBU where higher ABVs are associated with higher IBUs. This is backed up when we see a reasonablly stong correlation of 0.671. 
-
-Going furthar, we looked at the 12 most popular beer types (which represent 65% of the beers sampled) and looked at the correlation between IBU and ABV. Interestingly, the association between ABV and IBU was not strong within the styles of beer. All the correlations were less than the 0.671 we saw overall. Some (such as American Poter, and American Double/Imperial IPA) had low correlations and scatter plots that looked random. 
-
-It seems that some styles of beer have higher IBUs and that those styles will also have higher ABVs, however within a group there is IBUs and ABU aren't as strongly tied. This means that when releasing a new beer, it might be more important to make sure the ABU and IBUs are in line with other beers of the style than trying to match some ratio of IBU and ABV.
-
-
 ```{r}
 #Uses method 2 for handling missing data (replace NAs with average of present data)
 
@@ -261,6 +277,14 @@ ggplot(data=averaged_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())
 
 ggplot(data=averaged_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
 ```
+## Question 7: 
+
+Looking at the scatter plot of ABV vs IBU, we see that there is a reasonably strong linear trend between ABV and IBU where higher ABVs are associated with higher IBUs. This is backed up when we see a reasonably stong correlation of 0.671 (using missing data correction method 1 which omitted non-complete records - method 2 of replacing NA values with the average of the present data yielded a similar but lower correlation of 0.520). 
+
+Going furthar, we looked at the 12 most popular beer types (which represent 65% of the beers sampled) and looked at the correlation between IBU and ABV. Interestingly, the association between ABV and IBU was not strong within the styles of beer. All the correlations were less than the 0.671 we saw overall. Some (such as American Poter, and American Double/Imperial IPA) had low correlations and scatter plots that looked random. 
+
+It seems that some styles of beer have higher IBUs and that those styles will also have higher ABVs, however within a group there is IBUs and ABU aren't as strongly tied. This means that when releasing a new beer, it might be more important to make sure the ABU and IBUs are in line with other beers of the style than trying to match some ratio of IBU and ABV.
+
 
 ### IPAs vs. Ales
 Budweiser would also like to investigate the difference with respect to IBU and ABV between IPAs (India Pale Ales) and other types of Ale (any beer with “Ale” in its name other than IPA).  You decide to use KNN classification to investigate this relationship.  Provide statistical evidence one way or the other. You can of course assume your audience is comfortable with percentages … KNN is very easy to understand conceptually.
