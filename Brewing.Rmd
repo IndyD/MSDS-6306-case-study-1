@@ -326,12 +326,58 @@ plot(complete_accs$k,complete_accs$accuracy, type = "l", xlab = "k", ylab="Accur
 complete_accs[15,]
 
 plot(avg_accs$k,avg_accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
+avg_accs[5,]
 
 ```
 
 ### Additional inferences
 Knock their socks off!  Find one other useful inference from the data that you feel Budweiser may be able to find value in.  You must convince them why it is important and back up your conviction with appropriate statistical evidence. 
 ```{r}
+## add features for if the beer is an IPA or if the brewer is from the west coast
+westCoast = c('CA', 'OR', 'WA')
+completed_beer$WestCoast <- ifelse(completed_beer$State %in% westCoast, "West Coast", "Other States")
+completed_beer$IPA <- ifelse(grepl("IPA", completed_beer$Style), "IPA", "Other")
+
+ipa = completed_beer %>% filter(IPA=='IPA')
+state_ipa <- ipa %>% group_by(State) %>% tally() # count the number of breweries within a state
+
+
+### Map of IPAs per state ###
+## add lowercase state name for heat map
+lstates = tolower(state.name)
+state_count = state_ipa %>% 
+    add_rownames("region") %>% 
+    mutate( region=lstates[match(State, state.abb)] )
+
+## find center of each state for text position 
+snames <- data.frame(region=lstates, long=state.center$x, lat=state.center$y)
+snames <- merge(snames, state_count, by="region")
+
+## merge map data with counts data
+choro <- left_join(
+  map_data("state"), 
+  state_count
+)
+ggplot(choro, aes(long, lat)) +
+  geom_polygon(aes(group = group, fill = n)) + 
+  geom_text(data=snames, aes(long, lat, label=n)) +
+  coord_quickmap() +
+  ggtitle("IPAs per State")
+### end map ###
+
+## Chart of IPA perentage in West Coast vs other regions
+ggplot(data=completed_beer, aes(WestCoast)) +
+  geom_bar(aes(fill=as.factor(IPA)), position="fill")
+
+## Density plots of IBU in West Coast vs other regions
+ggplot(ipa, aes(IBU)) + 
+  geom_density(aes(fill=WestCoast), alpha=0.8)+ 
+  labs(title="IBUs for West Coast vs Other IPAs", fill="Region")
+
+ggplot(data=ipa, mapping=aes(x = WestCoast, y = IBU)) + geom_boxplot() + 
+  ggtitle("IBU of West Coast IPAs vs other IPAs")
+
+t.test(ipa$IBU~ipa$WestCoast)
 
 ```
 
