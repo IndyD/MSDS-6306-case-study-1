@@ -277,8 +277,8 @@ ggplot(data=averaged_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())
 
 ggplot(data=averaged_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
 ```
-## Question 7: 
 
+## Question 7: 
 Looking at the scatter plot of ABV vs IBU, we see that there is a reasonably strong linear trend between ABV and IBU where higher ABVs are associated with higher IBUs. This is backed up when we see a reasonably stong correlation of 0.671 (using missing data correction method 1 which omitted non-complete records - method 2 of replacing NA values with the average of the present data yielded a similar but lower correlation of 0.520). 
 
 Going furthar, we looked at the 12 most popular beer types (which represent 65% of the beers sampled) and looked at the correlation between IBU and ABV. Interestingly, the association between ABV and IBU was not strong within the styles of beer. All the correlations were less than the 0.671 we saw overall. Some (such as American Poter, and American Double/Imperial IPA) had low correlations and scatter plots that looked random. 
@@ -338,7 +338,9 @@ avgAle = aleSplit(averaged_beer)
   
 ggplot(data=completedAle, mapping=aes(x = Style, y = IBU)) + geom_boxplot() + 
   ggtitle("IBU of IPAs vs Other Ales")
-ggplot(data=completedAle, mapping=aes(x = Style, y = ABV)) + geom_boxplot() +
+ggplot(data=completedAle, mapping=aes(x = Style, y = ABVpercent)) + 
+  geom_boxplot() +
+  ylab('ABV')
   ggtitle("ABV of IPAs vs Other Ales")
 ggplot(data=completedAle, mapping=aes(x=ABVpercent, y=IBU, color=Style, position_jitter())) + geom_point() + xlab('% ABV') + ggtitle('ABV and IBU of IPAs vs other Ales')
 
