@@ -66,10 +66,12 @@ choro <- left_join(
 ggplot(choro, aes(long, lat)) +
   geom_polygon(aes(group = group, fill = n)) + 
   geom_text(data=snames, aes(long, lat, label=n)) +
+  ggtitle("Breweries per State")
   coord_quickmap()
 
 
 ```
+
 ## Question 1: 
 The range of breweries per state ranges from 1 to 47, with Colorado holding the highest number of breweries per state. The heat map above shows North and South Dakotas along with West Virginia as having the lowest number of breweries (1 per state). Following Colorado is California with 39 and Oregon with 29 breweries. There appears to be higher number of breweries in the north east and west coast, as opposed to the central states, with the exception of Colorado and Texas. 
 
@@ -95,7 +97,8 @@ head(brewed_beer,6) # show the first 6 rows of data
 tail(brewed_beer,6) # show the last 6 rows of data
 
 ```
-##Question 2:
+
+## Question 2:
 The two data sets were merged using the Brewer_id value. The first and last 6 rows of data were shown to spot-check accuracy.
 
 #### Missing Data
@@ -236,7 +239,7 @@ cor(x=completed_beer$ABVpercent, y=completed_beer$IBU)
 
 #Visualizations between ABV percentage and IBU
 ggplot(data=completed_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
-ggplot(data=completed_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
+
 
 # filter down to the top 12 most popular beers
 popular_styles = completed_beer %>% 
@@ -275,7 +278,6 @@ cor(x=averaged_beer$ABVpercent, y=averaged_beer$IBU)
 #Visualizations between ABV percentage and IBU
 ggplot(data=averaged_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())) + geom_point()
 
-ggplot(data=averaged_beer, mapping=aes(x= ABVpercent, y= IBU, position_jitter())) + geom_point()
 ```
 
 ## Question 7: 
@@ -292,6 +294,7 @@ Budweiser would also like to investigate the difference with respect to IBU and 
 In addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.  
 ```{r}
 
+## create a df for only IPAs and other Ales
 aleSplit <- function(beers) {
   ipa = beers[grep("IPA", beers$Style), ]
   ipa$Style = beers[grep("IPA", beers$Style), ]
@@ -305,7 +308,9 @@ aleSplit <- function(beers) {
   return(allAles)
 }
 
+## Create kNN for k from 1 to 30 and return accuracy df
 classifyKnn <- function(ales) {
+  # 60/40 train/test split
   set.seed(0)
   splitPerc = .60
   trainIndices = sample(1:dim(ales)[1], round(splitPerc * dim(ales)[1]))
@@ -315,9 +320,12 @@ classifyKnn <- function(ales) {
   testLabels = test$Style
   train = subset(train, select = c(ABV, IBU))
   test = subset(test, select = c(ABV, IBU))
+  
+  # Scale the features 
   train = as.data.frame(scale(train))
   test = as.data.frame(scale(test))
   
+  # get accuracy score for kNN for k=1 to k=30
   neighbors = 30
   accs = data.frame(accuracy = numeric(neighbors), k = numeric(neighbors))
   for(i in 1:neighbors)
@@ -335,7 +343,8 @@ classifyKnn <- function(ales) {
 
 completedAle = aleSplit(completed_beer)
 avgAle = aleSplit(averaged_beer)
-  
+
+## Looks at the graphs of IBU and ABV
 ggplot(data=completedAle, mapping=aes(x = Style, y = IBU)) + geom_boxplot() + 
   ggtitle("IBU of IPAs vs Other Ales")
 ggplot(data=completedAle, mapping=aes(x = Style, y = ABVpercent)) + 
@@ -347,7 +356,7 @@ ggplot(data=completedAle, mapping=aes(x=ABVpercent, y=IBU, color=Style, position
 complete_accs = classifyKnn(completedAle)
 avg_accs = classifyKnn(avgAle)
 
-
+## Look at accuracy plots to find best k to report the scores
 plot(complete_accs$k,complete_accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
 complete_accs[15,]
 
@@ -355,6 +364,12 @@ plot(avg_accs$k,avg_accs$accuracy, type = "l", xlab = "k", ylab="Accuracy")
 avg_accs[5,]
 
 ```
+
+## Question 8: 
+Now we look at boxplots of IBU and ABV for IPAs and other Ales. We can see that IPAs have a higher ABV and IBU than other ales. Looking at a scatter plot broken down by color, the distinction between the two style is pretty clear with the IPAs strongly clustered in the high ABV/high IBU part of the chart and the other ales more centered at the low ABV/low IBU part of the chart.
+
+To further explor this, we built attempted to classify the beers as IPA or other Ale based on only the IBU and ABV information using an algroithm called kNN and found very promising results. With the type 1 correction of missing values (leaving them out), we were able to accuractely classify 88% of ales as IPA or other based only on IBU and ABV. With the type 2 correction, this accuracy was 83%.
+
 
 ### Additional inferences
 Knock their socks off!  Find one other useful inference from the data that you feel Budweiser may be able to find value in.  You must convince them why it is important and back up your conviction with appropriate statistical evidence. 
@@ -393,18 +408,27 @@ ggplot(choro, aes(long, lat)) +
 
 ## Chart of IPA perentage in West Coast vs other regions
 ggplot(data=completed_beer, aes(WestCoast)) +
-  geom_bar(aes(fill=as.factor(IPA)), position="fill")
+  geom_bar(aes(fill=as.factor(IPA)), position="fill") +
+  xlab('Region') +
+  labs(fill='Beer Style') 
+
+ggplot(data=ipa, mapping=aes(x = WestCoast, y = IBU)) + geom_boxplot() + 
+  ggtitle("IBU of West Coast IPAs vs other IPAs") +
+  xlab('Region')
 
 ## Density plots of IBU in West Coast vs other regions
 ggplot(ipa, aes(IBU)) + 
   geom_density(aes(fill=WestCoast), alpha=0.8)+ 
   labs(title="IBUs for West Coast vs Other IPAs", fill="Region")
 
-ggplot(data=ipa, mapping=aes(x = WestCoast, y = IBU)) + geom_boxplot() + 
-  ggtitle("IBU of West Coast IPAs vs other IPAs")
-
 t.test(ipa$IBU~ipa$WestCoast)
-
 ```
 
+## Question 9: 
+Finally, we wanted to explore IBU of IPAs in the West coast. The West Coast IPA is a category of IPA that is popular along the pacific coast and features a heavy use of hops, which is usually paired with a high IBU. West Coast IPAs are not specifically labelled in this dataset so we wanted to see if there was a difference in IPAs in the West Coast in general.
 
+Looking at the heat maps of IPAs per state we see that the West coast does seem to be the main hub for IPAs, even accounting for the increased number of breweries in the West coast states. In fact, a chart of the percentage of beers that were IPAs does show that the West Coast has a higher percentage of IPAs.
+
+Having established the abundance of IPA in the West coast, the next issue is the IBU. Box plots for the West coast and other reagions show that the average IBU is about the same. The chart of the distributions, however, does show an interesting pattern. The graphs mostly overlap, but there is a hump where the West coast states stand out at about the 80-100 IBU range. What this means is that there are more beers in the 80-100 IBU range in the West Coast.
+
+From a business prespective, this means that the averge IPA in the west coast is about as bitter as any other region. However, there does seem to be a elevated number of IPAs in the 80-100 IBU range in the West coast. This range seems to be in line with the style of West Coast IPA. If you wanted to target a niche beer towards West Coast IPA fans, this would likely be the IBU range to aim for.
