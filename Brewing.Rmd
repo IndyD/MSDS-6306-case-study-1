@@ -1,13 +1,21 @@
 ---
-title: "Brewing Up a Storm"
+title: "The Bitter Truth"
 output:
   html_document:
     df_print: paged
 editor_options:
   chunk_output_type: console
 ---
-### Introduction
+## Introduction
 
+This document summarizes the analysis and findings centered around craft breweries and beers. The data contains 2000+ beers and 500+ breweries. The purpose of this analysis is to determine whether there are any findings that would be beneficial to the Budwiser enterprise, provide leadership with data driven conclusions to make informed decisions, and/or allow for oversight on consumer preferences.
+
+We appreciate you taking the time to review the information below. Please contact Inderbir Dhillon (Project Lead), Nick Blair and/or Jamie Vo if you have any questions. 
+
+
+## Analysis
+
+Load in all dependencies (libraries).
 ```{r}
 # load in the libraries
 library(stringi)
@@ -19,10 +27,9 @@ library(e1071)
 library(tidyverse)
 ```
 
-## Analysis
 
 ### Read in the data
-Read in data from files
+Read in data from files from csv files and display the data frames. 
 ```{r}
 beer = read.csv("./data/Beers.csv",header = TRUE)
 breweries = read.csv("./data/Breweries.csv",header = TRUE, strip.white = TRUE)
@@ -36,6 +43,8 @@ breweries
 
 ### How many breweries are there in each state?
 
+Count the number of breweries in each state and check for unique breweries in each state. 
+
 ```{r}
 
 str(breweries) # check that State is a Factor
@@ -46,6 +55,8 @@ unique_state_breweies <- breweries %>% group_by(State) %>% tally(n_distinct(Name
 ```
 
 #### Heat Map of Breweies per State
+
+Create a heat map of the breweries per state to visualize density. 
 
 ```{r}
 ## add lowercase state name for heat map
@@ -72,7 +83,6 @@ ggplot(choro, aes(long, lat)) +
 
 ```
 
-## Question 1: 
 The range of breweries per state ranges from 1 to 47, with Colorado holding the highest number of breweries per state. The heat map above shows North and South Dakotas along with West Virginia as having the lowest number of breweries (1 per state). Following Colorado is California with 39 and Oregon with 29 breweries. There appears to be higher number of breweries in the north east and west coast, as opposed to the central states, with the exception of Colorado and Texas. 
 
 The high density of breweries may indicate greater competition, as well as a large audience for beer. 
@@ -80,7 +90,8 @@ The high density of breweries may indicate greater competition, as well as a lar
 ### Cleaning the data
 Prepering/transforming the data into a usable form for analysis, visualization, etc... 
 #### Merging Dataframes
-Merge beer data with the breweries data. Print the first 6 observations and the last 6 observations to check the merged file.  
+Merge beer data with the breweries data. Print the first 6 observations and the last 6 observations to check the merged file.
+The two data sets were merged using the Brewer_id value. The first and last 6 rows of data were shown to spot-check accuracy.
 ```{r}
 
 attach(beer)
@@ -97,9 +108,6 @@ head(brewed_beer,6) # show the first 6 rows of data
 tail(brewed_beer,6) # show the last 6 rows of data
 
 ```
-
-## Question 2:
-The two data sets were merged using the Brewer_id value. The first and last 6 rows of data were shown to spot-check accuracy.
 
 #### Missing Data
 Missing data are in columns ABV (62) and IBU (1005) only. 
@@ -126,10 +134,10 @@ averaged_beer$ABV[is.na(averaged_beer$ABV)]<-averageABV
 colSums(is.na(averaged_beer))
 
 ```
-## Question 3: 
+
 The areas missing data are confined to the alcohol by volume (ABV) and international bitterness units (IBU) data values. The missing ABV may be explained due by state laws that do or do not regulate the labelling of alcohol content on beers. Breweries in states that do not require the ABV to be labelled may not have this data. The lack of IBU data is likely due to bitterness testing requiring lab equipment, personelle, and addiitonal expenses that are not required for the manufacturing of beer. 
 
-The data was mutated in two ways: method 1. which only contains data where all testing variables were complete and method 2. where the missing data were replaced with the averages of the available data. 
+The data was mutated in two ways: method 1. which only contains data where all testing variables were complete and method 2. where the missing data were replaced with the averages of the available data. It was determined that when removing rows with missing data, the primary difference was with the lower ABV, which is originally 0.1% rather than 2.7% with missing values removed
 
 
 ### Median Alcohol Content
@@ -152,7 +160,6 @@ ggplotly(IBU_bar)
 mean(median_df$ABV)
 mean(median_df$IBU)
 ```
-## Question 4: 
 
 We use median as our measure of center to prevent outliers from skewing the data and causing errors to interpretation
 
@@ -175,7 +182,6 @@ max_state <- rbind(max_ABV, max_IBU)
 max_state
 
 ```
-## Question 5: 
 
 Reviewing the original data rather than the medians of each state, Kentucky had the highest ABV of all states, with 12.5% alcohol by volume. Oregon has the highest bitterness score of 138 ibu. We can see that both the ABV and IBU of the two beers are above the average medians of the states (5.6% and 39.98 ibu, respectively). 
 
@@ -205,7 +211,7 @@ summary(averaged_beer$ABVpercent)
 cat("Standard deviation: ", sd(averaged_beer$ABVpercent))
 
 ```
-## Question 6: 
+
 Summary statistics provided for ABV (%) are the data range, quartiles, mean, and standard deviation. These values differ slightly depending on which correction method is used to handle missing data in the set. 
 
 Using method 1 (ommitting non-complete records):
@@ -227,10 +233,8 @@ Max: 12.8%
 SD: 1.337%
 
 
-
-
 ### Relationship between Bitterness and Alcohol Content
-Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.  Make your best judgment of a relationship and EXPLAIN your answer.
+Is there an apparent relationship between the bitterness of the beer and its alcoholic content? A scatter plot is used for visualization.
 ```{r}
 #Uses method 1 for handling missing data (remove incomplete lines)
 
@@ -280,7 +284,6 @@ ggplot(data=averaged_beer, mapping=aes(x= IBU, y= ABVpercent, position_jitter())
 
 ```
 
-## Question 7: 
 Looking at the scatter plot of ABV vs IBU, we see that there is a reasonably strong linear trend between ABV and IBU where higher ABVs are associated with higher IBUs. This is backed up when we see a reasonably stong correlation of 0.671 (using missing data correction method 1 which omitted non-complete records - method 2 of replacing NA values with the average of the present data yielded a similar but lower correlation of 0.520). 
 
 Going furthar, we looked at the 12 most popular beer types (which represent 65% of the beers sampled) and looked at the correlation between IBU and ABV. Interestingly, the association between ABV and IBU was not strong within the styles of beer. All the correlations were less than the 0.671 we saw overall. Some (such as American Poter, and American Double/Imperial IPA) had low correlations and scatter plots that looked random. 
@@ -289,9 +292,11 @@ It seems that some styles of beer have higher IBUs and that those styles will al
 
 
 ### IPAs vs. Ales
-Budweiser would also like to investigate the difference with respect to IBU and ABV between IPAs (India Pale Ales) and other types of Ale (any beer with “Ale” in its name other than IPA).  You decide to use KNN classification to investigate this relationship.  Provide statistical evidence one way or the other. You can of course assume your audience is comfortable with percentages … KNN is very easy to understand conceptually.
 
-In addition, while you have decided to use KNN to investigate this relationship (KNN is required) you may also feel free to supplement your response to this question with any other methods or techniques you have learned.  Creativity and alternative solutions are always encouraged.  
+Investigation between the difference of IBU to ABV between IPAs and Ales. 
+
+We used KNN (K-nearest neighbor) to classify the relationship, which classifies a beer based on its nearest k-number of beers. (e.g. if n is the beer in question and 4 of 5 of the nearest beers are higher in IBU, we would classify n to have higher IBU as well).
+ 
 ```{r}
 
 ## create a df for only IPAs and other Ales
@@ -365,14 +370,13 @@ avg_accs[5,]
 
 ```
 
-## Question 8: 
 Now we look at boxplots of IBU and ABV for IPAs and other Ales. We can see that IPAs have a higher ABV and IBU than other ales. Looking at a scatter plot broken down by color, the distinction between the two style is pretty clear with the IPAs strongly clustered in the high ABV/high IBU part of the chart and the other ales more centered at the low ABV/low IBU part of the chart.
 
 To further explor this, we built attempted to classify the beers as IPA or other Ale based on only the IBU and ABV information using an algroithm called kNN and found very promising results. With the type 1 correction of missing values (leaving them out), we were able to accuractely classify 88% of ales as IPA or other based only on IBU and ABV. With the type 2 correction, this accuracy was 83%.
 
 
-### Additional inferences
-Knock their socks off!  Find one other useful inference from the data that you feel Budweiser may be able to find value in.  You must convince them why it is important and back up your conviction with appropriate statistical evidence. 
+### IBUs of West Coast IPAs
+
 ```{r}
 ## add features for if the beer is an IPA or if the brewer is from the west coast
 westCoast = c('CA', 'OR', 'WA')
@@ -424,7 +428,6 @@ ggplot(ipa, aes(IBU)) +
 t.test(ipa$IBU~ipa$WestCoast)
 ```
 
-## Question 9: 
 Finally, we wanted to explore IBU of IPAs in the West coast. The West Coast IPA is a category of IPA that is popular along the pacific coast and features a heavy use of hops, which is usually paired with a high IBU. West Coast IPAs are not specifically labelled in this dataset so we wanted to see if there was a difference in IPAs in the West Coast in general.
 
 Looking at the heat maps of IPAs per state we see that the West coast does seem to be the main hub for IPAs, even accounting for the increased number of breweries in the West coast states. In fact, a chart of the percentage of beers that were IPAs does show that the West Coast has a higher percentage of IPAs.
@@ -432,3 +435,14 @@ Looking at the heat maps of IPAs per state we see that the West coast does seem 
 Having established the abundance of IPA in the West coast, the next issue is the IBU. Box plots for the West coast and other reagions show that the average IBU is about the same. The chart of the distributions, however, does show an interesting pattern. The graphs mostly overlap, but there is a hump where the West coast states stand out at about the 80-100 IBU range. What this means is that there are more beers in the 80-100 IBU range in the West Coast.
 
 From a business prespective, this means that the averge IPA in the west coast is about as bitter as any other region. However, there does seem to be a elevated number of IPAs in the 80-100 IBU range in the West coast. This range seems to be in line with the style of West Coast IPA. If you wanted to target a niche beer towards West Coast IPA fans, this would likely be the IBU range to aim for.
+
+## Conclusion
+We discovered that Colorado and California are the states with highest numbers of breweries (47 and 39 respectively). If we remove one of the two same breweries in Colorado, that number drops to 46. In addition to duplicates effecting the data, removing records that had missing values resulted in the minimum ABV to go from 0.1% to 2.7%. Since no other siginificant changes to the data summaries were observed, analysis continued with the removal of missing data. 
+
+The median ABV and IBU were found to be 5.6% and 39.98, and the max to be 12.5% (Kentucky) and 138 (Oregon), respectively. Interestingly, we found a strong, positive linear relationship between ABV and IBU. After additional analysis, we can see that IPAs have a higher ABV and IBU than other ales, and by using a KNN algorithim, accuractely predict if its an IPA with 83% accuracy. In continuation of the Ale study, there is evidence to suggest that IPAs with higher IBUs are most prominent on the west coast. 
+
+Additional data for analysis is recommended to support the findings found in this analysis. Regardless, it is interesting to observe high densities of breweries in Colorado and California. In addiiton, the data may suggest that higher ABV and IBU than average may flourish on the west coast (California) considering its prominence in the area. 
+
+
+
+
